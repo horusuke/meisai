@@ -61,19 +61,31 @@ def denpyou(df):
         df.columns.get_loc('商品名'),
         '',
         '')
-    
-    # カラム名を変更
+
+    # カラム名を変更（全角・半角の両方に対応）
     column_rename_map = {
         '郵便番号(配送先)': 'お届け先郵便番号',
         '氏名(配送先)': 'お届け先氏名',
         '敬称': 'お届け先敬称',
         '都道府県(配送先)': 'お届け先住所1行目',
         '住所(配送先)': 'お届け先住所2行目',
-        '住所3(配送先)': 'お届け先住所3行目',
-        '': 'お届け先住所4行目',
+        '住所2(配送先)': 'お届け先住所3行目',
         '商品名': '内容品'
     }
-    df = df.rename(columns=column_rename_map)
+    
+    # 住所2(配送先)の全角・半角の両方に対応
+    if '住所2(配送先)' in df.columns:
+        column_rename_map['住所2(配送先)'] = 'お届け先住所3行目'
+    elif '住所２(配送先)' in df.columns:
+        column_rename_map['住所２(配送先)'] = 'お届け先住所3行目'
+    
+    # 存在するカラムのみを変更
+    existing_rename_map = {k: v for k, v in column_rename_map.items() if k in df.columns}
+    df = df.rename(columns=existing_rename_map)
+    
+    # 空文字列の列名を変更
+    if '' in df.columns:
+        df = df.rename(columns={'': 'お届け先住所4行目'})
 
     return df
 
@@ -333,11 +345,18 @@ if st.session_state.df is not None:
         st.warning("⚠️ ファイル名は .csv で終わる必要があります")
         custom_filename = default_filename
     
-    csv = st.session_state.df.to_csv(index=False, encoding='shift_jis')
+    # Shift_JISエンコーディングでCSVデータを生成
+    import io
+    csv_buffer = io.StringIO()
+    st.session_state.df.to_csv(csv_buffer, index=False)
+    csv_string = csv_buffer.getvalue()
+    # Shift_JISエンコーディングでバイト列に変換
+    csv_bytes = csv_string.encode('shift_jis')
+    
     st.download_button(
         label="📥 CSVファイルとしてダウンロード（処理後データ）",
-        data=csv,
+        data=csv_bytes,
         file_name=custom_filename if custom_filename else default_filename,
-        mime="text/csv",
-        help="処理後のデータをCSVファイルとしてダウンロードします"
+        mime="text/csv; charset=shift_jis",
+        help="処理後のデータをShift_JISエンコーディングでCSVファイルとしてダウンロードします"
     )
