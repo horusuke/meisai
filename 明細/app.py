@@ -54,13 +54,10 @@ def denpyou(df):
         '住所(配送先)',
         '住所2(配送先)',
         '住所3(配送先)',
+        'お届け先住所4行目',
         '商品名']
 
-    df = df[[c for c in ordered_cols if c in df.columns]]
-    df.insert(
-        df.columns.get_loc('商品名'),
-        '',
-        '')
+
     
     # カラム名を変更
     column_rename_map = {
@@ -69,7 +66,7 @@ def denpyou(df):
         '敬称': 'お届け先敬称',
         '都道府県(配送先)': 'お届け先住所1行目',
         '住所(配送先)': 'お届け先住所2行目',
-        '住所3(配送先)': 'お届け先住所4行目',
+        '住所3(配送先)': 'お届け先住所3行目',
         '商品名': '内容品'
     }
     df = df.rename(columns=column_rename_map)
